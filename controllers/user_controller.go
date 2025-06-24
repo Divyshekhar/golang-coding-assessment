@@ -101,12 +101,7 @@ func Signup(ctx *gin.Context) {
 	ctx.SetCookie("jwt_token",tokenStr, 3600*24, "/", "localhost", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "User registered successfully",
-		"user": gin.H{
-			"id": user.ID,
-			"name": user.Name,
-			"email": user.Email,
-			"role": user.Role,
-		},
+		"user": user,
 	})
 
 }

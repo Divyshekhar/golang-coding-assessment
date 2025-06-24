@@ -83,29 +83,29 @@ func Signup(ctx *gin.Context) {
 		Role:     body.Role,
 	}
 	result := initializers.Db.Create(&user)
-	if result.Error != nil {
+	if result.Error != nil{
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not create user"})
 		return
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"role":    user.Role,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"role": user.Role,
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	})
 	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
+	if err != nil{
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not sign token"})
 		return
 	}
-	ctx.SetCookie("jwt_token", tokenStr, 3600*24, "/", "localhost", false, true)
+	ctx.SetCookie("jwt_token",tokenStr, 3600*24, "/", "localhost", false, true)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "User registered successfully",
 		"user": gin.H{
-			"id":    user.ID,
-			"name":  user.Name,
+			"id": user.ID,
+			"name": user.Name,
 			"email": user.Email,
-			"role":  user.Role,
+			"role": user.Role,
 		},
 	})
 

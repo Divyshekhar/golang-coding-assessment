@@ -59,3 +59,54 @@ func Login(ctx *gin.Context) {
 	})
 
 }
+
+func Signup(ctx *gin.Context) {
+	var body struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Role     string `json:"role"`
+	}
+	if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+		return
+	}
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(body.Password), 14)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+	user := models.User{
+		Name:     body.Name,
+		Email:    body.Email,
+		Password: string(hashedPass),
+		Role:     body.Role,
+	}
+	result := initializers.Db.Create(&user)
+	if result.Error != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "could not create user"})
+		return
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	})
+	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not sign token"})
+		return
+	}
+	ctx.SetCookie("jwt_token", tokenStr, 3600*24, "/", "localhost", false, true)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "User registered successfully",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+	})
+
+}

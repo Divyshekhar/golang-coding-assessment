@@ -10,5 +10,6 @@ func RegisterPatientRoutes(ctx *gin.Engine) {
 	patientGroup := ctx.Group("/patient")
 	{
 		patientGroup.POST("/create", middleware.RequireAuth(), controllers.RegisterPatient)
+		patientGroup.PATCH("/edit", middleware.RequireAuth(), controllers.EditPatient)
 	}
 }

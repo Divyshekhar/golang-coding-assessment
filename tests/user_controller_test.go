@@ -8,14 +8,18 @@ import (
 	"testing"
 
 	"github.com/Divyshekhar/golang-coding-assessment/controllers"
+	"github.com/Divyshekhar/golang-coding-assessment/initializers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
+func init(){
+	initializers.LoadEnv()
+}
 func TestSignup(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
-	router.POST("/user/create", controllers.Signup)
+	router.POST("/user/signup", controllers.Signup)
 	body := map[string]string{
 		"name":     "Test User",
 		"email":    "test@patient.com",

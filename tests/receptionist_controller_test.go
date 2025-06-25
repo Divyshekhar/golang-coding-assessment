@@ -36,7 +36,7 @@ func init() {
 	}
 }
 
-func getTestJWTToken() string {
+func GetTestJWTToken() string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": 1,
 		"role":    "receptionist",
@@ -68,7 +68,7 @@ func TestRegisterPatient(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(&http.Cookie{
 		Name:  "jwt_token",
-		Value: getTestJWTToken(),
+		Value: GetTestJWTToken(),
 	})
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
@@ -88,7 +88,7 @@ func TestDeletePatient(t *testing.T) {
 	assert.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "jwt_token",
-		Value: getTestJWTToken(),
+		Value: GetTestJWTToken(),
 	})
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
@@ -127,7 +127,7 @@ func TestEditPatient(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(&http.Cookie{
 		Name:  "jwt_token",
-		Value: getTestJWTToken(),
+		Value: GetTestJWTToken(),
 	})
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
@@ -143,7 +143,7 @@ func TestGetPatient(t *testing.T) {
 	assert.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "jwt_token",
-		Value: getTestJWTToken(),
+		Value: GetTestJWTToken(),
 	})
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)

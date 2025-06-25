@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Divyshekhar/golang-coding-assessment/initializers"
@@ -33,6 +34,16 @@ func RegisterPatient(ctx *gin.Context) {
 	roleVal := role.(string)
 	if roleVal != "receptionist" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can register the patient"})
+		return
+	}
+	var user models.User
+	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
+	if usertxn.Error != nil{
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the receptionist"})
+		return
+	}
+	if user.Role != "receptionist"{
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can do this action"})
 		return
 	}
 	if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -71,12 +82,12 @@ func EditPatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no patient id found"})
 		return
 	}
-	_, exist := ctx.Get("user_id")
+	userId, exist := ctx.Get("user_id")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-
+	userID := userId.(uint)
 
 	role, exist := ctx.Get("role")
 	if !exist {
@@ -87,7 +98,16 @@ func EditPatient(ctx *gin.Context) {
 	if roleVal != "receptionist" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist are edit the patient information"})
 	}
-
+	var user models.User
+	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
+	if usertxn.Error != nil{
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the receptionist"})
+		return
+	}
+	if user.Role != "receptionist"{
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist are allowed to this"})
+		return
+	}
 	var patient models.Patient
 	result := initializers.Db.Where("id = ?", id).First(&patient)
 	if result.Error != nil {
@@ -100,7 +120,6 @@ func EditPatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON body"})
 		return
 	}
-
 
 	allowed := map[string]bool{
 		"first_name": true,
@@ -146,4 +165,55 @@ func EditPatient(ctx *gin.Context) {
 		"patient": patient,
 	})
 
+}
+func DeletePatient(ctx *gin.Context) {
+	userId, exist := ctx.Get("user_id")
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+	role, exist := ctx.Get("role")
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+	userID := userId.(uint)
+	if role != "receptionist" {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can change this information"})
+		return
+	}
+	patientId, err := strconv.ParseUint(ctx.Param("patient_id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
+		return
+	}
+	var user models.User
+	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
+	if usertxn.Error != nil{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not find the user",
+		})
+		return
+	}
+	if user.Role != "receptionist"{
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"error": "only receptionist can change this information",
+		})
+		return
+	}
+	var patient models.Patient
+	txn := initializers.Db.Where("patient_id = ?", patientId).First(&patient)
+	if txn.Error != nil{
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the patient"})
+		return
+	}
+	deltxn := initializers.Db.Delete(&models.Patient{}, patientId)
+	if deltxn.Error != nil{
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "patient deleted successfully",
+		"patient_deleted": patient,
+	})
 }

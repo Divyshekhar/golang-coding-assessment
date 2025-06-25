@@ -1,0 +1,305 @@
+{
+	"info": {
+		"_postman_id": "1fa24238-4106-41a1-9f00-cb985c7824d2",
+		"name": "Patient-Management API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35103807"
+	},
+	"item": [
+		{
+			"name": "Login/Signup",
+			"item": [
+				{
+					"name": "Login API",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"doctor@example.com\",\n    \"password\": \"secret123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/user/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"user",
+								"login"
+							]
+						},
+						"description": "Login for both doctor and receptionist"
+					},
+					"response": []
+				},
+				{
+					"name": "Signup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New User\",\n    \"email\": \"newuser@gmail.com\",\n    \"password\": \"secret1234\",\n    \"role\": \"doctor\"\n\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/user/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"user",
+								"signup"
+							]
+						},
+						"description": "Create new doctor/receptionist using this"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Receptionist",
+			"item": [
+				{
+					"name": "Create Patient",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"dob\": \"1990-05-20\",\n  \"gender\": \"male\",\n  \"phone\": \"1234567890\",\n  \"email\": \"john.doe@example.com\",\n  \"address\": \"123 Main Street\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/patient/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"create"
+							]
+						},
+						"description": "Requires login.\n\nThis route expects a valid jwt_token cookie to be present.  \nLogin using /user/login."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Patient",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"updated\",\n    \"lastName\": \"updateName\",\n    \"dob\": \"2005-01-20\",\n    \"gender\": \"female\",\n    \"email\": \"newemail@gmail\",\n    \"address\": \"new address\"\n\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/patient/edit/:patient_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"edit",
+								":patient_id"
+							],
+							"variable": [
+								{
+									"key": "patient_id",
+									"value": ""
+								}
+							]
+						},
+						"description": ":patient_id — Path parameter (required). The ID of the patient whose data you want to access.\n\nIt is also a protected route."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Patient",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/patient/delete/:patient_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"delete",
+								":patient_id"
+							],
+							"variable": [
+								{
+									"key": "patient_id",
+									"value": ""
+								}
+							]
+						},
+						"description": ":patient_id — Path parameter (required). The ID of the patient whose data you want to access.\n\n:protected_route — user needs to be signed in with proper role to make this call"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Patients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/patient/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"all"
+							]
+						},
+						"description": ": returns the list of all the patients registered\n\n: protected_route — user needs to be signed in with proper role to make this call"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Doctor",
+			"item": [
+				{
+					"name": "Create Note",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"note\": \"this is the note that the doctor will create for the respective patient_id\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/patient/create/notes/:patient_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"create",
+								"notes",
+								":patient_id"
+							],
+							"variable": [
+								{
+									"key": "patient_id",
+									"value": ""
+								}
+							]
+						},
+						"description": ":patient_id — Path parameter (required). The ID of the patient whose data you want to create note for.\n\n:protected_route — user needs to be signed in with proper role to make this call\n\n:role — only doctors can create notes about patient"
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Note",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"note\": \"this is the updated notes\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/patient/edit/notes/:patient_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"edit",
+								"notes",
+								":patient_id"
+							],
+							"variable": [
+								{
+									"key": "patient_id",
+									"value": ""
+								}
+							]
+						},
+						"description": ":patient_id — Path parameter (required). The ID of the patient whose data you want to edit the note for.\n\n:protected_route — user needs to be signed in with proper role to make this call\n\n:role — only doctors can edit notes about patient"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Note",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/patient/notes/:patient_id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"patient",
+								"notes",
+								":patient_id"
+							],
+							"variable": [
+								{
+									"key": "patient_id",
+									"value": ""
+								}
+							]
+						},
+						"description": ":patient_id — Path parameter (required). The ID of the patient whose data you want to retrieve the note for.\n\n:protected_route — user needs to be signed in with proper role to make this call\n\n:role — only doctors can retrieve notes about patient"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

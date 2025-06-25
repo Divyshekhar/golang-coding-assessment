@@ -13,7 +13,7 @@ The API collection is available in the [`docs`](./docs) folder:
 You can download this json and import this into Postman to test all endpoints.
 
   
-#### 🏃🏻‍♂️ Running Command
+#### 🏃🏻‍♂️ Run Command
 	go run main.go
 
 #### 🛠️ Build Command

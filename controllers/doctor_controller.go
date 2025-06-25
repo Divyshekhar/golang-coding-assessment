@@ -117,5 +117,43 @@ func EditPatientNotes(ctx *gin.Context) {
 		"message": "Patient note updated successfully",
 		"note":    note,
 	})
+}
 
+func GetPatientNotes(ctx *gin.Context) {
+	userId, exist := ctx.Get("user_id")
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+	userID := userId.(uint)
+	role, exist := ctx.Get("role")
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+	if role != "doctor" {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "only doctors can retrieve the patient notes"})
+		return
+	}
+	patientIdUint, err := strconv.ParseUint(ctx.Param("patient_id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
+		return
+	}
+	var patient models.PatientNote
+	txn := initializers.Db.Where("patient_id = ?", patientIdUint).
+		Where("doctor_id = ?", userID).
+		First(&patient)
+	if txn.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve the patient notes"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":      "Fetched successful",
+		"patient data": patient,
+	})
 }

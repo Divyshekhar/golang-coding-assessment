@@ -13,13 +13,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init(){
+func init() {
 	initializers.LoadEnv()
 }
 func TestSignup(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
 	router.POST("/user/signup", controllers.Signup)
+
+	// Clean up user if it already exists
+	initializers.Db.Exec("DELETE FROM users WHERE email = ?", "test@patient.com")
+
 	body := map[string]string{
 		"name":     "Test User",
 		"email":    "test@patient.com",
@@ -31,11 +35,12 @@ func TestSignup(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, "/user/signup", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	assert.NoError(t, err)
+
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, 200, resp.Code)
-
 }
+
 func TestLogin(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()

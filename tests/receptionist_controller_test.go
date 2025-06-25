@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -37,8 +38,13 @@ func init() {
 }
 
 func GetTestJWTToken() string {
+	var user models.User
+	err := initializers.Db.Where("email = ?", "test@receptionist.com").First(&user).Error
+	if err != nil {
+		panic("Doctor not found for token generation")
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": 1,
+		"user_id": user.ID,
 		"role":    "receptionist",
 		"exp":     time.Now().Add(time.Hour * 1).Unix(),
 	})
@@ -76,6 +82,25 @@ func TestRegisterPatient(t *testing.T) {
 	t.Log("Response:", resp.Body.String())
 }
 
+// func TestDeletePatient(t *testing.T) {
+// 	gin.SetMode(gin.TestMode)
+// 	router := gin.Default()
+
+// 	router.Use(middleware.RequireAuth())
+// 	router.DELETE("/patient/delete/:patient_id", controllers.DeletePatient)
+
+//		patientID := "1"
+//		req, err := http.NewRequest(http.MethodDelete, "/patient/delete/"+patientID, nil)
+//		assert.NoError(t, err)
+//		req.AddCookie(&http.Cookie{
+//			Name:  "jwt_token",
+//			Value: GetTestJWTToken(),
+//		})
+//		resp := httptest.NewRecorder()
+//		router.ServeHTTP(resp, req)
+//		assert.Equal(t, http.StatusOK, resp.Code)
+//		t.Log("Delete Patient Response:", resp.Body.String())
+//	}
 func TestDeletePatient(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
@@ -83,13 +108,28 @@ func TestDeletePatient(t *testing.T) {
 	router.Use(middleware.RequireAuth())
 	router.DELETE("/patient/delete/:patient_id", controllers.DeletePatient)
 
-	patientID := "1"
-	req, err := http.NewRequest(http.MethodDelete, "/patient/delete/"+patientID, nil)
+	// Create a temporary patient for deletion test
+	registeredBy := uint(1)
+	patient := models.Patient{
+		FirstName:    "Delete",
+		LastName:     "Me",
+		DOB:          time.Date(1995, 1, 1, 0, 0, 0, 0, time.UTC),
+		Gender:       "female",
+		Phone:        "0000000000",
+		Email:        "deleteme@example.com",
+		Address:      "Temporary Address",
+		RegisteredBy: &registeredBy,
+	}
+	initializers.Db.Create(&patient)
+
+	// Send DELETE request
+	req, err := http.NewRequest(http.MethodDelete, "/patient/delete/"+strconv.Itoa(int(patient.ID)), nil)
 	assert.NoError(t, err)
 	req.AddCookie(&http.Cookie{
 		Name:  "jwt_token",
 		Value: GetTestJWTToken(),
 	})
+
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 	assert.Equal(t, http.StatusOK, resp.Code)

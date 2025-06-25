@@ -143,7 +143,7 @@ func GetPatientNotes(ctx *gin.Context) {
 		return
 	}
 	var patient models.PatientNote
-	txn := initializers.Db.Where("id = ?", patientIdUint).
+	txn := initializers.Db.Where("patient_id = ?", patientIdUint).
 		Where("doctor_id = ?", user.ID).
 		First(&patient)
 	if txn.Error != nil {

@@ -134,3 +134,20 @@ func TestEditPatient(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Code)
 	t.Log("Edit Patient Response:", resp.Body.String())
 }
+func TestGetPatient(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.Use(middleware.RequireAuth())
+	router.GET("/patient/all", controllers.GetPatient)
+	req, err := http.NewRequest(http.MethodGet, "/patient/all", nil)
+	assert.NoError(t, err)
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt_token",
+		Value: getTestJWTToken(),
+	})
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusOK, resp.Code)
+	t.Log("Get Patient Response:", resp.Body.String())
+
+}

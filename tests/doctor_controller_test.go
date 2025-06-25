@@ -87,3 +87,39 @@ func TestCreatePatientNote(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Code)
 	t.Log("Create Note Response:", resp.Body.String())
 }
+func TestEditPatientNotes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.Use(middleware.RequireAuth())
+	router.PATCH("/patient/edit/notes/:patient_id", controllers.EditPatientNotes)
+	body := map[string]string{
+		"note": "updated doctors note",
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, err := http.NewRequest(http.MethodPatch, "/patient/edit/notes/1", bytes.NewBuffer(jsonBody))
+	assert.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt_token",
+		Value: GetTestJWTTokenDoctor(),
+	})
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	assert.Equal(t, http.StatusOK, resp.Code)
+	t.Log("Edit Patient Notes Response:", resp.Body.String())
+}
+func TestGetPatientNotes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+	router.Use(middleware.RequireAuth())
+	router.GET("/patient/notes/:patient_id", controllers.GetPatientNotes)
+	req, err := http.NewRequest(http.MethodGet, "/patient/notes/1", nil)
+	assert.NoError(t, err)
+	req.AddCookie(&http.Cookie{
+		Name:  "jwt_token",
+		Value: GetTestJWTTokenDoctor(),
+	})
+	resp := httptest.NewRecorder()
+	assert.Equal(t, http.StatusOK, resp.Code)
+	t.Log("Get Patient Notes Response:", resp.Body.String())
+}

@@ -32,7 +32,8 @@ func CreatePatientNotes(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
 		return
 	}
-	result := initializers.Db.Where("id = ?", patientId).First(patientId)
+	var patient models.Patient
+	result := initializers.Db.First(&patient, patientId)
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve record"})
 		return
@@ -85,7 +86,7 @@ func EditPatientNotes(ctx *gin.Context) {
 	}
 	var note models.PatientNote
 	if err := initializers.Db.
-		Where("patient_id = ?", patientId).
+		Where("id = ?", patientId).
 		First(&note).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "patient note not found"})
 		return
@@ -133,7 +134,7 @@ func GetPatientNotes(ctx *gin.Context) {
 		return
 	}
 	user, ok := utils.GetUserAndCheckRole(ctx, "doctor")
-	if !ok{
+	if !ok {
 		return
 	}
 	patientIdUint, err := strconv.ParseUint(ctx.Param("patient_id"), 10, 64)
@@ -142,7 +143,7 @@ func GetPatientNotes(ctx *gin.Context) {
 		return
 	}
 	var patient models.PatientNote
-	txn := initializers.Db.Where("patient_id = ?", patientIdUint).
+	txn := initializers.Db.Where("id = ?", patientIdUint).
 		Where("doctor_id = ?", user.ID).
 		First(&patient)
 	if txn.Error != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Divyshekhar/golang-coding-assessment/initializers"
 	"github.com/Divyshekhar/golang-coding-assessment/models"
+	"github.com/Divyshekhar/golang-coding-assessment/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,12 +21,6 @@ func RegisterPatient(ctx *gin.Context) {
 		Email     string `json:"email"`
 		Address   string `json:"address"`
 	}
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-	userID := userId.(uint)
 	role, exist := ctx.Get("role")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated with correct role"})
@@ -36,14 +31,8 @@ func RegisterPatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can register the patient"})
 		return
 	}
-	var user models.User
-	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
-	if usertxn.Error != nil{
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the receptionist"})
-		return
-	}
-	if user.Role != "receptionist"{
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can do this action"})
+	user, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
+	if !ok{
 		return
 	}
 	if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -63,7 +52,7 @@ func RegisterPatient(ctx *gin.Context) {
 		Phone:        body.Phone,
 		Email:        body.Email,
 		Address:      body.Address,
-		RegisteredBy: &userID,
+		RegisteredBy: &user.ID,
 	}
 	result := initializers.Db.Create(&patient)
 	if result.Error != nil {
@@ -82,12 +71,6 @@ func EditPatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "no patient id found"})
 		return
 	}
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-	userID := userId.(uint)
 
 	role, exist := ctx.Get("role")
 	if !exist {
@@ -98,14 +81,8 @@ func EditPatient(ctx *gin.Context) {
 	if roleVal != "receptionist" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist are edit the patient information"})
 	}
-	var user models.User
-	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
-	if usertxn.Error != nil{
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the receptionist"})
-		return
-	}
-	if user.Role != "receptionist"{
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist are allowed to this"})
+	_, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
+	if !ok{
 		return
 	}
 	var patient models.Patient
@@ -167,17 +144,11 @@ func EditPatient(ctx *gin.Context) {
 
 }
 func DeletePatient(ctx *gin.Context) {
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
 	role, exist := ctx.Get("role")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	userID := userId.(uint)
 	if role != "receptionist" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist can change this information"})
 		return
@@ -187,18 +158,8 @@ func DeletePatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
 		return
 	}
-	var user models.User
-	usertxn := initializers.Db.Where("id = ?", userID).First(&user)
-	if usertxn.Error != nil{
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "could not find the user",
-		})
-		return
-	}
-	if user.Role != "receptionist"{
-		ctx.JSON(http.StatusForbidden, gin.H{
-			"error": "only receptionist can change this information",
-		})
+	_, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
+	if !ok{
 		return
 	}
 	var patient models.Patient

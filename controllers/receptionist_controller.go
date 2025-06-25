@@ -32,7 +32,7 @@ func RegisterPatient(ctx *gin.Context) {
 		return
 	}
 	user, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
-	if !ok{
+	if !ok {
 		return
 	}
 	if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
@@ -82,7 +82,7 @@ func EditPatient(ctx *gin.Context) {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only receptionist are edit the patient information"})
 	}
 	_, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
-	if !ok{
+	if !ok {
 		return
 	}
 	var patient models.Patient
@@ -159,22 +159,50 @@ func DeletePatient(ctx *gin.Context) {
 		return
 	}
 	_, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
-	if !ok{
+	if !ok {
 		return
 	}
 	var patient models.Patient
 	txn := initializers.Db.Where("patient_id = ?", patientId).First(&patient)
-	if txn.Error != nil{
+	if txn.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the patient"})
 		return
 	}
 	deltxn := initializers.Db.Delete(&models.Patient{}, patientId)
-	if deltxn.Error != nil{
+	if deltxn.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete"})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "patient deleted successfully",
+		"message":         "patient deleted successfully",
 		"patient_deleted": patient,
+	})
+}
+func GetPatient(ctx *gin.Context) {
+	role, exist := ctx.Get("role")
+	roleVal := role.(string)
+	if roleVal != "receptionist" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "only receptionist can access this",
+		})
+		return
+	}
+	if !exist {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+	_, ok := utils.GetUserAndCheckRole(ctx, "receptionist")
+	if !ok {
+		return
+	}
+	var patients []models.Patient
+	txn := initializers.Db.Find(&patients)
+	if txn.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve the patients"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":  "Patients retrieved",
+		"patients": patients,
 	})
 }

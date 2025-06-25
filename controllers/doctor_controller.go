@@ -90,7 +90,7 @@ func EditPatientNotes(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "patient note not found"})
 		return
 	}
-	if note.DoctorID != nil && *note.DoctorID == userID {
+	if note.DoctorID != nil && *note.DoctorID != userID {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to edit this note"})
 		return
 	}

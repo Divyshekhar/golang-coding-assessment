@@ -11,5 +11,7 @@ func RegisterPatientRoutes(ctx *gin.Engine) {
 	{
 		patientGroup.POST("/create", middleware.RequireAuth(), controllers.RegisterPatient)
 		patientGroup.PATCH("/edit", middleware.RequireAuth(), controllers.EditPatient)
+		patientGroup.POST("/create/notes/:patient_id", middleware.RequireAuth(), controllers.CreatePatientNotes)
+		patientGroup.PATCH("/edit/notes/:patient_id", middleware.RequireAuth(), controllers.EditPatientNotes)
 	}
 }

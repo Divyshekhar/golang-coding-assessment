@@ -9,7 +9,7 @@ import (
 )
 
 func GetUserAndCheckRole(ctx *gin.Context, expectedRole string) (*models.User, bool) {
-	userIdVal, exists := ctx.Get("userId")
+	userIdVal, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return nil, false

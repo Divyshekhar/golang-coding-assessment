@@ -163,7 +163,7 @@ func DeletePatient(ctx *gin.Context) {
 		return
 	}
 	var patient models.Patient
-	txn := initializers.Db.Where("patient_id = ?", patientId).First(&patient)
+	txn := initializers.Db.Where("id = ?", patientId).First(&patient)
 	if txn.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the patient"})
 		return

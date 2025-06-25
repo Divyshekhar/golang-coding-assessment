@@ -6,32 +6,33 @@ import (
 
 	"github.com/Divyshekhar/golang-coding-assessment/initializers"
 	"github.com/Divyshekhar/golang-coding-assessment/models"
+	"github.com/Divyshekhar/golang-coding-assessment/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func CreatePatientNotes(ctx *gin.Context) {
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-	userID := userId.(uint)
 	role, exist := ctx.Get("role")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	if role != "doctor" {
+	roleVal := role.(string)
+	if roleVal != "doctor" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only doctor can edit patient notes"})
 		return
 	}
+	user, ok := utils.GetUserAndCheckRole(ctx, "doctor")
+	if !ok {
+		return
+	}
+
 	patientIdStr := ctx.Param("patient_id")
 	patientId, err := strconv.ParseUint(patientIdStr, 10, 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
 		return
 	}
-	result := initializers.Db.Where("id = ?").First(patientId)
+	result := initializers.Db.Where("id = ?", patientId).First(patientId)
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not retrieve record"})
 		return
@@ -45,7 +46,7 @@ func CreatePatientNotes(ctx *gin.Context) {
 	}
 	note := models.PatientNote{
 		PatientID: uint(patientId),
-		DoctorID:  &userID,
+		DoctorID:  &user.ID,
 		Note:      body.Note,
 	}
 	txn := initializers.Db.Create(&note)
@@ -62,19 +63,18 @@ func CreatePatientNotes(ctx *gin.Context) {
 }
 
 func EditPatientNotes(ctx *gin.Context) {
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
-		return
-	}
-	userID := userId.(uint)
 	role, exist := ctx.Get("role")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	if role != "doctor" {
+	roleVal := role.(string)
+	if roleVal != "doctor" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only doctors are allowed to edit the patient's note"})
+		return
+	}
+	user, ok := utils.GetUserAndCheckRole(ctx, "doctor")
+	if !ok {
 		return
 	}
 	patientIdStr := ctx.Param("patient_id")
@@ -90,7 +90,7 @@ func EditPatientNotes(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "patient note not found"})
 		return
 	}
-	if note.DoctorID != nil && *note.DoctorID != userID {
+	if note.DoctorID != nil && *note.DoctorID != user.ID {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to edit this note"})
 		return
 	}
@@ -120,14 +120,6 @@ func EditPatientNotes(ctx *gin.Context) {
 }
 
 func GetPatientNotes(ctx *gin.Context) {
-	userId, exist := ctx.Get("user_id")
-	if !exist {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error": "user not authenticated",
-		})
-		return
-	}
-	userID := userId.(uint)
 	role, exist := ctx.Get("role")
 	if !exist {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
@@ -135,8 +127,13 @@ func GetPatientNotes(ctx *gin.Context) {
 		})
 		return
 	}
-	if role != "doctor" {
+	roleVal := role.(string)
+	if roleVal != "doctor" {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "only doctors can retrieve the patient notes"})
+		return
+	}
+	user, ok := utils.GetUserAndCheckRole(ctx, "doctor")
+	if !ok{
 		return
 	}
 	patientIdUint, err := strconv.ParseUint(ctx.Param("patient_id"), 10, 64)
@@ -146,7 +143,7 @@ func GetPatientNotes(ctx *gin.Context) {
 	}
 	var patient models.PatientNote
 	txn := initializers.Db.Where("patient_id = ?", patientIdUint).
-		Where("doctor_id = ?", userID).
+		Where("doctor_id = ?", user.ID).
 		First(&patient)
 	if txn.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve the patient notes"})

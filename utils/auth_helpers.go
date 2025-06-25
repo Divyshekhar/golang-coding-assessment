@@ -9,16 +9,27 @@ import (
 )
 
 func GetUserAndCheckRole(ctx *gin.Context, expectedRole string) (*models.User, bool) {
-	userId, exists := ctx.Get("user_id")
+	userIdVal, exists := ctx.Get("userId")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return nil, false
 	}
 
-	userID := userId.(uint)
+	var userID uint
+	switch id := userIdVal.(type) {
+	case float64:
+		userID = uint(id)
+	case int:
+		userID = uint(id)
+	case uint:
+		userID = id
+	default:
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "invalid user ID format"})
+		return nil, false
+	}
 
 	var user models.User
-	if err := initializers.Db.Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := initializers.Db.First(&user, userID).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "could not find the user"})
 		return nil, false
 	}

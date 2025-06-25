@@ -22,7 +22,11 @@ func RequireAuth() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token or expired"})
+			return
+		}
 		userId := claims["user_id"]
 		role := claims["role"]
 		ctx.Set("userId", userId)

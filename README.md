@@ -28,7 +28,8 @@ The API collection is available in the [`docs`](./docs) folder:
 You can download this json and import this into Postman to test all endpoints.
 
   
-
+#### ⬇️ Clone Repo
+	git clone https://github.com/Divyshekhar/golang-coding-assessment.git
   
 
 #### 🏃🏻‍♂️ Run Command

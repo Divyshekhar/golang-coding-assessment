@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -93,10 +92,8 @@ func EditPatientNotes(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "patient note not found"})
 		return
 	}
-	log.Printf("note.DoctorID: %v (%d), user.ID: %d", note.DoctorID, *note.DoctorID, user.ID)
 
 	if note.DoctorID != nil && *note.DoctorID != user.ID {
-		log.Printf("DoctorID in note: %v, Logged-in Doctor ID: %d", note.DoctorID, user.ID)
 
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "unauthorized to edit this note"})
 		return
